@@ -11,7 +11,11 @@ class PriceTable
   end
 
   def add(item)
-    new_id = (item.cid + '$' + item.period.to_s).to_sym
+    begin
+      new_id = (item.cid + '$' + item.period.to_s).to_sym
+    rescue
+      binding.pry
+    end
     main_table[new_id] = item
     @size += 1
   end
@@ -64,42 +68,60 @@ class PriceTable
   
   private
 
+  # use #load only to re-build the source objects
+  # takes over 2 min to load
+  # save to Marshal only possible in Safe Mode (from 2005 only)
+  # currently they are stored in a Marshal file (~14 sec)
+
   def load
+    puts '--------------------------------------------------------'
     puts 'Loading data...'
     start_time = Time.now
     periods = []
-    (1993..2014).each { |year| periods << "12/31/#{year}" }
-    
-    CSV.foreach("data - annual since 1993.csv", headers: true, encoding: 'ISO-8859-1') do |row|
-      for i in 0..periods.size - 1
-        ebit = row[i * 6 + 5].to_f.round(3)
-        ev = row[i * 6 + 6].to_f.round(3)
-        net_ppe = row[i * 6 + 7].to_f.round(3)
-        nwc = row[i * 6 + 8].to_f.round(3)
-        market_cap = row[i * 6 + 4].to_f.round(3)
-        price = row[i * 6 + 9].to_f.round(2)
-        new_entry_fields = { cid: row[2],
-          period: (Date.strptime(periods[i], '%m/%d/%Y')).to_s,
-          market_cap: market_cap,
-          net_ppe: net_ppe,
-          nwc: nwc,
-          ltm_ebit: ebit,
-          ev: ev,
-          earnings_yield: (ebit > 0 && ev > 0) ? (ebit / ev).round(4) : 0,
-          roc: ebit > 0 ? (ebit / (net_ppe + nwc)).round(4) : 0,
-          price: price,
-          delisted: false }
-        delisted_check = /(\d+\/\d+\/\d+)/.match(row[i * 6 + 9])
-        if delisted_check
-          new_entry_fields[:delisted] = true
-          new_entry_fields[:delisting_date] = (Date.strptime(delisted_check[1], '%m/%d/%Y')).to_s
-        end
-        new_entry = PricePoint.new(new_entry_fields)
-        self.add(new_entry)
-        puts "#{((size / 218504.0).round(2) * 100).round.to_s}% complete; #{size} out of 218,504 entries added" if size % 10000 == 0
-      end   # all PricePoints for this CID filled
-      company_table.add(Company.new(name: row[0], cid: row[2], ticker: row[3]))
-    end  # all PricePoints filled
+    (2000..2015).each do |year|
+      (1..12).each { |month| periods << "#{month}/1/#{year}" }
+    end
+
+    (1..2).each do |part|
+      CSV.foreach("data_part_#{part}.csv", headers: true, encoding: 'ISO-8859-1') do |row|
+        for i in 0..periods.size - 1
+          new_entry_fields = {
+            cid: row[2],
+            period: (Date.strptime(periods[i], '%m/%d/%Y')).to_s,
+            price: row[i * 15 + 8].to_f.round(2),
+            # low_52: row[i * 15 + 9].to_f.round(2),
+            # high_52: row[i * 15 + 10].to_f.round(2),
+            ev: row[i * 15 + 11].to_f.round(3),
+            ltm_ebit: row[i * 15 + 12].to_f.round(3),
+            # ltm_ebitda: row[i * 15 + 13].to_f.round(3),
+            ocf_ltm: row[i * 15 + 14].to_f.round(3) > 0 ? '+' : '-',
+            ocf_minus_1: row[i * 15 + 15].to_f.round(3) > 0 ? '+' : '-',
+            ocf_minus_2: row[i * 15 + 16].to_f.round(3) >0 ? '+' : '-',
+            net_ppe: row[i * 15 + 17].to_f.round(3),
+            nwc: row[i * 15 + 18].to_f.round(3),
+            market_cap: row[i * 15 + 19].to_f.round(3),
+            range_52: row[i * 15 + 20].to_f.round(3),
+            roc: row[i * 15 + 21].to_f.round(3),
+            earnings_yield: row[i * 15 + 22].to_f.round(3),
+            delisted: (row[6] == 'index' ? true : false) }
+          delisted_check = /(\d+\/\d+\/\d+)/.match(row[i * 15 + 8])
+          if delisted_check
+            new_entry_fields[:delisted] = true
+            new_entry_fields[:delisting_date] = (Date.strptime(delisted_check[1], '%m/%d/%Y')).to_s
+          end
+          new_entry = PricePoint.new(new_entry_fields) if new_entry_fields[:delisting_date] != ''
+          self.add(new_entry)
+
+          # confirm total count
+
+          $stdout.sync = true
+          print "   #{((size / 822756.0) * 100).round(1).to_s}% complete; #{comma_separated(size)} out of 822,756 entries added\r" if size % 1000 == 0
+        end   # all PricePoints for this CID filled
+        company_table.add(Company.new(name: row[0], cid: row[2], sector: row[6]))
+      end  # all PricePoints filled
+    end
+
+    puts ''
     puts '--------------------------------------------------------'
     puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
     puts '--------------------------------------------------------'

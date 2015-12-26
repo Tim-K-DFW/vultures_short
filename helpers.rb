@@ -1,3 +1,13 @@
+def load_data
+  puts '--------------------------------------------------------'    
+  puts 'Loading data...'
+  start_time = Time.now
+  result = Marshal.load File.open('data.marsh', 'rb').read
+  puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
+  puts '--------------------------------------------------------'    
+  result
+end
+
 def time_back(ending_period, increment)
   if increment == :year
     ending_period.gsub(/^\d{4}/, (ending_period[0..3].to_i - 1).to_s)
@@ -15,6 +25,10 @@ def another_run?
   $stdout.sync = true
   print 'Another run? ("y" for yes) => '
   gets.chomp == 'y'
+end
+
+def comma_separated(num)
+  num.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse
 end
 
 def engine_params

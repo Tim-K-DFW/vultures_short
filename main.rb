@@ -8,7 +8,7 @@ Dir["Classes/*.rb"].each { |file| load file }
 if ARGV.include?('output_only')
   ReportPrinter.new(JSON.parse(File.read('result.txt'))).generate
 else
-  data_table = PriceTable.new
+  data_table = load_data
   begin
     results = Engine.new(data_table, engine_params).perform
     File.open("result.txt", "w") { |file| file.write(results.to_json) }

@@ -1,9 +1,9 @@
 class Company
-  attr_accessor :name, :cid, :ticker
+  attr_accessor :name, :cid, :sector
 
   def initialize(args)
     @name = args[:name]
     @cid = args[:cid]
-    @ticker = args[:ticker]
+    @sector = args[:sector]
   end
 end
