@@ -22,12 +22,12 @@ class Portfolio
   end
 
   def as_of(report_date)
-    binding.pry if report_date == nil
+    # binding.pry if report_date == nil
     PortfolioInspector.new(self, report_date).snapshot
   end
 
   def carry_forward(new_period)
-    old_period = time_back(new_period, :year)
+    old_period = time_back(new_period, :month)
     periods[new_period] = {}
     periods[new_period][:positions] = {}
     periods[old_period][:positions].each do |cid, old_position|

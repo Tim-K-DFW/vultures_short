@@ -4,6 +4,7 @@ class PriceTable
   attr_reader :main_table, :size, :company_table
 
   def initialize
+    binding.pry
     @main_table = {}
     @company_table = CompanyTable.new
     @size = 0
@@ -29,8 +30,7 @@ class PriceTable
                       v.delisted == FALSE &&
                       v.ltm_ebit > 0 &&
                       v.roc > 0 &&
-                      v.earnings_yield > 0 &&
-                      v.roc < 10) }.map { |k, v| v }
+                      v.earnings_yield > 0) }.map { |k, v| v }
   end
 
   def where(args)
@@ -62,7 +62,15 @@ class PriceTable
     # end
 
     result = []
-    (1993..2014).each { |year| result << "#{year}-12-31" }
+    if args[:debug]
+      (2005..2006).each do |year|
+        (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }
+      end
+    else
+      (2005..2015).each do |year|
+        (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }
+      end
+    end
     result
   end
   
@@ -78,12 +86,12 @@ class PriceTable
     puts 'Loading data...'
     start_time = Time.now
     periods = []
-    (2000..2015).each do |year|
+    (2005..2006).each do |year|
       (1..12).each { |month| periods << "#{month}/1/#{year}" }
     end
 
-    (1..2).each do |part|
-      CSV.foreach("data_part_#{part}.csv", headers: true, encoding: 'ISO-8859-1') do |row|
+    # (1..2).each do |part|
+      CSV.foreach("data_m_2005-06.csv", headers: true, encoding: 'ISO-8859-1') do |row|
         for i in 0..periods.size - 1
           new_entry_fields = {
             cid: row[2],
@@ -119,11 +127,17 @@ class PriceTable
         end   # all PricePoints for this CID filled
         company_table.add(Company.new(name: row[0], cid: row[2], sector: row[6]))
       end  # all PricePoints filled
-    end
+    # end
 
     puts ''
     puts '--------------------------------------------------------'
     puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
+
     puts '--------------------------------------------------------'
+    binding.pry
+
+    # these lines to manually test memory sufficiency for read/write
+    # File.open('test.marsh', 'wb') {|f| f.write(Marshal.dump(self)) }
+    # test_read = Marshal.load File.open('test.marsh', 'rb').read
   end
 end

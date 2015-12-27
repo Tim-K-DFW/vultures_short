@@ -2,6 +2,9 @@ class ReportGenerator
   attr_reader :portfolio, :parameters, :data_table
   attr_accessor :resuts
 
+  # TODO: replace with 'sp500' during next data file rebuild, same for Russell2000
+  SP500_ID = 'IQ2668699'   
+
   def initialize(data_table, portfolio, parameters)
     @data_table = data_table
     @portfolio = portfolio
@@ -30,7 +33,7 @@ class ReportGenerator
       this_period = {}
       this_period['date'] = end_date
       this_period['balance'] = portfolio.as_of(end_date)[:total_market_value]
-      this_period['sp500_value'] = data_table.where(cid: 'sp500', period: end_date).price
+      this_period['sp500_value'] = data_table.where(cid: SP500_ID, period: end_date).price
       this_period['by_period'] = relative_return(single_period_start(end_date), end_date)
       this_period['annualized'] = annualized_return(this_period['by_period'])
       this_period['cumulative_cy'] = relative_return(cumulative_cy_start(end_date), end_date)
@@ -129,8 +132,8 @@ class ReportGenerator
   end
 
   def sp500_return(beginning, ending)
-    beginning_value = data_table.where(cid: 'sp500', period: beginning).price
-    ending_value = data_table.where(cid: 'sp500', period: ending).price
+    beginning_value = data_table.where(cid: SP500_ID, period: beginning).price
+    ending_value = data_table.where(cid: SP500_ID, period: ending).price
     (ending_value / beginning_value - 1).round(4)
   end
 
@@ -138,6 +141,8 @@ class ReportGenerator
     case parameters["rebalance_frequency"]
     when 'annual'
       time_back(ending_date, :year)
+    when 'monthly'
+      time_back(ending_date, :month)
     end
   end
 
@@ -145,6 +150,8 @@ class ReportGenerator
     case parameters["rebalance_frequency"]
     when 'annual'
       time_back(ending_date, :year)
+    when 'monthly'
+      time_back(ending_date, :month)
     end
   end
 
@@ -152,6 +159,8 @@ class ReportGenerator
     case parameters["rebalance_frequency"]
     when 'annual'
       time_back(ending_date, :year)
+    when 'monthly'
+      time_back(ending_date, :month)
     end
   end
 
@@ -161,8 +170,8 @@ class ReportGenerator
     beginning_balance = portfolio.as_of(start_date)[:total_market_value]
     ending_balance = portfolio.as_of(end_date)[:total_market_value]
     result['portfolio'] = ((ending_balance / beginning_balance) ** (1.0 / portfolio.periods.count) - 1).round(4)
-    sp500_beginning_balance = data_table.where(cid: 'sp500', period: start_date).price
-    sp500_ending_balance = data_table.where(cid: 'sp500', period: end_date).price
+    sp500_beginning_balance = data_table.where(cid: SP500_ID, period: start_date).price
+    sp500_ending_balance = data_table.where(cid: SP500_ID, period: end_date).price
     result['sp500'] = ((sp500_ending_balance / sp500_beginning_balance) ** (1.0 / portfolio.periods.count) - 1).round(4)
     result
   end
@@ -206,7 +215,7 @@ class ReportGenerator
     result['description'] = 'Maximum drawdown'
     result['portfolio'] = max_drawdown(([initial_balance] << by_period_results.map{|k| k['balance']}).flatten)
 
-    sp500_starting_value = data_table.where(cid: 'sp500', period: parameters["start_date"]).price
+    sp500_starting_value = data_table.where(cid: SP500_ID, period: parameters["start_date"]).price
     result['sp500'] = max_drawdown(([sp500_starting_value] << by_period_results.map{|k| k['sp500_value']}).flatten)
 
     result

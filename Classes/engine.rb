@@ -4,7 +4,7 @@ class Engine
   attr_reader :parameters, :portfolio, :table, :rebalance_frequency, :market_cap_floor, :market_cap_ceiling, :initial_balance, :start_date, :data_table
 
   def initialize(data_table, parameters=nil)
-    @data_table = data_table
+    @data_table  = data_table
     @parameters = parameters
   end
 
@@ -21,10 +21,11 @@ class Engine
       rebalance_frequency: parameters["rebalance_frequency"]
     })
 
-    data_table.all_periods.each do |period|
+    data_table.all_periods(debug: parameters[:debug]).each do |period|
       
       period = period.to_s
-      puts "Processing #{period}..."
+      $stdout.sync = true
+      print "   Processing #{period}...\r"
       # puts "Processing #{period} - ranking stocks"
       
       current_market_data = ScoreCalculator.new(

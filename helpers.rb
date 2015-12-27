@@ -1,8 +1,9 @@
-def load_data
+def load_data(args = nil)
+  filename = (args && args[:debug]) ? 'data_short.marsh' : 'data.marsh'
   puts '--------------------------------------------------------'    
   puts 'Loading data...'
   start_time = Time.now
-  result = Marshal.load File.open('data.marsh', 'rb').read
+  result = Marshal.load File.open(filename, 'rb').read
   puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
   puts '--------------------------------------------------------'    
   result
@@ -11,8 +12,12 @@ end
 def time_back(ending_period, increment)
   if increment == :year
     ending_period.gsub(/^\d{4}/, (ending_period[0..3].to_i - 1).to_s)
-  else
-    raise Exception.new('This increment not implemented yet.')
+  elsif increment == :month
+    if ending_period[5..6] == '01'
+      "#{(ending_period[0..3].to_i - 1).to_s}-12-#{ending_period[8..9]}"
+    else
+      "#{ending_period[0..4]}#{"%02d" % (ending_period[5..6].to_i - 1).to_s}#{ending_period[7..9]}"
+    end
   end
 end
 
@@ -51,7 +56,17 @@ def engine_params
   input = gets.chomp
   result['initial_balance'] = input == '' ? 1000000 : input.to_i
 
-  result['rebalance_frequency'] = 'annual'
-  result['start_date'] = '1993-12-31'
+  result['rebalance_frequency'] = 'monthly'
+  result['start_date'] = '2005-01-01'
   result
+end
+
+def engine_params_hardcoded
+  { 'market_cap_floor'  => 100,
+    'market_cap_ceiling'  => 200,
+    'position_count'  => 20,
+    'initial_balance'  => 1000000,
+    'rebalance_frequency'  => 'monthly',
+    'start_date'  => '2005-01-01',
+    debug: true }
 end
