@@ -29,7 +29,7 @@ class ReportPrinter
       table_title = s.styles.add_style(fg_color: '000000', bg_color: 'BDD4E8',
         b: true, alignment: { horizontal: :center, vertical: :center, wrap_text: true} )
       currency = s.styles.add_style(num_fmt: 8)
-      percentage = s.styles.add_style(num_fmt: 10)
+      percentage = s.styles.add_style(num_fmt: 10, alignment: { horizontal: :right })
       s.sheet_view.show_grid_lines = false
 
       s.add_row []
@@ -70,7 +70,7 @@ class ReportPrinter
       s.add_row ['', '', 'tested strategy', 'S&P 500'], style: [nil, Array.new(3, table_title)].flatten
       results['aggregated']['table'].keys[0..4].each do |line|
         this_line = results['aggregated']['table'][line]
-        s.add_row ['', this_line['description'], this_line['portfolio'], this_line['sp500']], style: percentage
+        s.add_row ['', this_line['description'], this_line['portfolio'], this_line['sp500']], style: [nil, nil, percentage, percentage]
       end
       this_line = results['aggregated']['table']['f_sharpe']
       s.add_row ['', 'Sharpe ratio', this_line['portfolio'], this_line['sp500']]

@@ -30,6 +30,7 @@ class ReportGenerator
     portfolio.periods.each do |end_date, state|
       # puts "Building reports - Performance for the period of #{end_date}"
       next if end_date == portfolio.periods.first[0]
+      # binding.pry if end_date == '2006-01-01'
       this_period = {}
       this_period['date'] = end_date
       this_period['balance'] = portfolio.as_of(end_date)[:total_market_value]
@@ -106,11 +107,17 @@ class ReportGenerator
   end
 
   def relative_return(beginning, ending)
+    # binding.pry if ending == '2006-01-01'
     result = {}
-    current_balance = portfolio.as_of(ending)[:total_market_value]
-    previous_period_balance = portfolio.as_of(beginning)[:total_market_value]
-    result['return'] = (current_balance / previous_period_balance - 1).round(4)
-    result['sp500_return'] = (sp500_return(beginning, ending)).round(4)
+    if beginning == 'n/a'
+      result['return'] = 'n/a'
+      result['sp500_return'] = 'n/a'
+    else
+      current_balance = portfolio.as_of(ending)[:total_market_value]
+      previous_period_balance = portfolio.as_of(beginning)[:total_market_value]
+      result['return'] = (current_balance / previous_period_balance - 1).round(4)
+      result['sp500_return'] = (sp500_return(beginning, ending)).round(4)
+    end
     result
   end
 
@@ -151,8 +158,12 @@ class ReportGenerator
     when 'annual'
       time_back(ending_date, :year)
     when 'monthly'
-      time_back(ending_date, :month)
-    end
+      if ending_date[5..6] == '01'
+        "#{(ending_date[0..4].to_i - 1).to_s}#{ending_date[4..9]}"
+      else
+        "#{ending_date[0..4]}01#{ending_date[7..9]}"
+      end
+    end    
   end
 
   def rolling_12_months_start(ending_date)
@@ -160,7 +171,11 @@ class ReportGenerator
     when 'annual'
       time_back(ending_date, :year)
     when 'monthly'
-      time_back(ending_date, :month)
+      if (Date.strptime(ending_date, '%Y-%m-%d') - Date.strptime(parameters['start_date'], '%Y-%m-%d')).to_i >= 365
+        "#{(ending_date[0..4].to_i - 1).to_s}#{ending_date[4..9]}"
+      else
+        'n/a'
+      end
     end
   end
 
