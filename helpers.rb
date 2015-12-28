@@ -5,7 +5,7 @@ def load_data(args = nil)
   start_time = Time.now
   result = Marshal.load File.open(filename, 'rb').read
   puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
-  puts '--------------------------------------------------------'    
+  puts '--------------------------------------------------------'
   result
 end
 
@@ -55,6 +55,7 @@ def engine_params
   print 'Initial balance in $ (default 1,000,000, no commas) => '
   input = gets.chomp
   result['initial_balance'] = input == '' ? 1000000 : input.to_i
+  puts '--------------------------------------------------------'
 
   result['rebalance_frequency'] = 'monthly'
   result['start_date'] = '2005-01-01'

@@ -1,5 +1,8 @@
 class TargetPortfolio
   attr_accessor :positions
+  attr_reader :market_data
+
+  SHARES_AVAILABLE = 0.2  # position size as % of market cap
 
   def initialize(args)
     @current_portfolio_balance = args[:current_portfolio_balance]
@@ -30,26 +33,27 @@ class TargetPortfolio
 
   def build_initial_positions
     max_allocation_per_position = @current_portfolio_balance / @position_count
-    @market_data.sort_by! {|h| h['total_score'] }
+    market_data.sort_by! {|h| h['total_score'] }
     @position_count.times do |i|
       begin
-        positions[@market_data[i]['cid'].to_sym] = this_position = {}
+        positions[market_data[i]['cid'].to_sym] = this_position = {}
       rescue
         binding.pry
       end
-      this_position[:price] = @market_data[i]['price']
-      this_position[:total_score] = @market_data[i]['total_score']
-      this_position[:share_count] = (max_allocation_per_position / this_position[:price]).floor
-      this_position[:cost] = (this_position[:share_count] * this_position[:price]).round(2)
+      this_position[:price] = market_data[i]['price']
+      this_position[:total_score] = market_data[i]['total_score']
+      max_shares_available = -((market_data[i]['market_cap'] * 1000000 * SHARES_AVAILABLE) / this_position[:price]).floor
+      this_position[:share_count] = [-(max_allocation_per_position / this_position[:price]).floor, max_shares_available].max
+      this_position[:cost] = (-this_position[:share_count] * this_position[:price]).round(2)
     end
   end
 
   def spend_balance
     positions.each do |cid, position|
       if cash_balance > position[:price]
-        additional_shares = (cash_balance / position[:price]).floor
-        position[:share_count] += additional_shares
-        position[:cost] = (position[:cost] + additional_shares * position[:price]).round(2)
+        additional_shares = -(cash_balance / position[:price]).floor
+        position[:share_count] -= additional_shares
+        position[:cost] = (position[:cost] - additional_shares * position[:price]).round(2)
       end
     end
   end # spend_balance

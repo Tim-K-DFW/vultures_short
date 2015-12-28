@@ -40,11 +40,10 @@ class Position
   end
 
   def decrease(amount, method=nil)
-    raise "cannot decrease a #{share_count}-share position by #{amount} shares (#{cid})" if amount > share_count
     pieces = method == :lifo ? pieces_sort(:desc) : pieces_sort(:asc)
     shares_to_remove = amount
     pieces.each do |piece|
-      if piece[1][:share_count] >= shares_to_remove
+      if piece[1][:share_count] <= shares_to_remove
         piece[1][:share_count] -= shares_to_remove
         shares_to_remove = 0
       else

@@ -60,9 +60,9 @@ class Portfolio
   def adjust_target_stocks_already_held(args)
     periods[args[:new_period]][:positions].each do |cid, current_position|
       excess_holdings = current_position.share_count - (!args[:target][cid].nil? ? args[:target][cid][:share_count] : 0)
-      if excess_holdings > 0
+      if excess_holdings < 0
         sell(date: args[:new_period], stock: cid, amount: excess_holdings)
-      elsif excess_holdings < 0
+      elsif excess_holdings > 0
         buy(date: args[:new_period], stock: cid, amount: -excess_holdings)
       end
     end
@@ -80,7 +80,6 @@ class Portfolio
     position = periods[today][:positions][args[:stock]]
     amount = args[:amount] == :all ? position.share_count : args[:amount]
     periods[today][:cash] = (periods[today][:cash] + amount * data_table.where(period: today, cid: position.cid).price).round(2)
-    
     if args[:amount] == :all
       position.pieces = {}
       delete_position(position)

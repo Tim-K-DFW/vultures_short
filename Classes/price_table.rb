@@ -27,10 +27,11 @@ class PriceTable
                       v.market_cap >= args[:cap_floor] &&
                       v.market_cap <= args[:cap_ceiling] &&
                       v.price > 0 &&
+                      v.price < 200000 &&
                       v.delisted == FALSE &&
-                      v.ltm_ebit > 0 &&
-                      v.roc > 0 &&
-                      v.earnings_yield > 0) }.map { |k, v| v }
+                      v.ltm_ebit != 0 &&
+                      v.roc != 0 &&
+                      v.earnings_yield != 0) }.map { |k, v| v }
   end
 
   def where(args)
@@ -132,8 +133,6 @@ class PriceTable
     puts ''
     puts '--------------------------------------------------------'
     puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
-
-    puts '--------------------------------------------------------'
     binding.pry
 
     # these lines to manually test memory sufficiency for read/write

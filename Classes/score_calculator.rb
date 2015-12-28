@@ -19,11 +19,11 @@ class ScoreCalculator
   private
 
   def assign_earnings_yield_scores
-    @stocks.sort_by { |h| -h["earnings_yield"] }.each_with_index{ |v, i| v["ey_score"] = i + 1 }
+    @stocks.sort_by { |h| h["earnings_yield"] }.each_with_index{ |v, i| v["ey_score"] = i + 1 }
   end
 
   def assign_roc_scores
-    @stocks.sort_by { |h| -h["roc"] }.each_with_index{ |v, i| v["roc_score"] = i + 1 }
+    @stocks.sort_by { |h| h["roc"] }.each_with_index{ |v, i| v["roc_score"] = i + 1 }
   end
 
   def assign_total_scores

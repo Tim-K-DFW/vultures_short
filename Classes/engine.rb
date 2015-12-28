@@ -4,12 +4,11 @@ class Engine
   attr_reader :parameters, :portfolio, :table, :rebalance_frequency, :market_cap_floor, :market_cap_ceiling, :initial_balance, :start_date, :data_table
 
   def initialize(data_table, parameters=nil)
-    @data_table  = data_table
+    @data_table = data_table
     @parameters = parameters
   end
 
   def perform
-    puts '--------------------------------------------------------'
     puts 'Trading...'
     start_time = Time.now
 
@@ -45,7 +44,6 @@ class Engine
         ).build
       @portfolio.rebalance(new_period: period, target: target_portfolio, parameters: parameters)
     end
-    puts '--------------------------------------------------------'
     puts "Trading complete! Time spent: #{(Time.now - start_time).round(2)} seconds."
     puts '--------------------------------------------------------'
 

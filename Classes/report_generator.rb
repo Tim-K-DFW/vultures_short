@@ -19,7 +19,6 @@ class ReportGenerator
     @results['performance'] = generate_performance
     @results['aggregated'] = aggregated_performance(@results['performance'])
     @results['positions'] = generate_positions
-    puts '--------------------------------------------------------'
     puts "Reports generated! Time spent: #{(Time.now - start_time).round(2)} seconds."
     puts '--------------------------------------------------------'
     @results
@@ -30,7 +29,6 @@ class ReportGenerator
     portfolio.periods.each do |end_date, state|
       # puts "Building reports - Performance for the period of #{end_date}"
       next if end_date == portfolio.periods.first[0]
-      # binding.pry if end_date == '2006-01-01'
       this_period = {}
       this_period['date'] = end_date
       this_period['balance'] = portfolio.as_of(end_date)[:total_market_value]
@@ -107,7 +105,6 @@ class ReportGenerator
   end
 
   def relative_return(beginning, ending)
-    # binding.pry if ending == '2006-01-01'
     result = {}
     if beginning == 'n/a'
       result['return'] = 'n/a'
@@ -181,29 +178,29 @@ class ReportGenerator
 
   def geometric_average(start_date, end_date)
     result = {}
-    result['description'] = 'Geometric average return'
+    result['description'] = 'Geometric average return, annualized'
     beginning_balance = portfolio.as_of(start_date)[:total_market_value]
     ending_balance = portfolio.as_of(end_date)[:total_market_value]
-    result['portfolio'] = ((ending_balance / beginning_balance) ** (1.0 / portfolio.periods.count) - 1).round(4)
+    result['portfolio'] = ending_balance.abs < 1e+12 ? ((ending_balance / beginning_balance) ** (1.0 / (portfolio.periods.count / 12)) - 1).round(4) : 'error'
     sp500_beginning_balance = data_table.where(cid: SP500_ID, period: start_date).price
     sp500_ending_balance = data_table.where(cid: SP500_ID, period: end_date).price
-    result['sp500'] = ((sp500_ending_balance / sp500_beginning_balance) ** (1.0 / portfolio.periods.count) - 1).round(4)
+    result['sp500'] = ((sp500_ending_balance / sp500_beginning_balance) ** (1.0 / (portfolio.periods.count / 12)) - 1).round(4)
     result
   end
 
   def arithmetic_average(start_date, end_date, by_period_results)
     result = {}
-    result['description'] = 'Arithmetic average return'
+    result['description'] = 'Arithmetic average of monthly returns, annualized'
     returns = by_period_results.map{|v| v['by_period']}.map{|v| v['return']}
-    result['portfolio'] = (returns.inject{ |sum, el| sum + el }.to_f / returns.size).round(4)
+    result['portfolio'] = (((returns.inject{ |sum, el| sum + el }.to_f / returns.size).round(4) + 1)**12 - 1).round(4)
     returns = by_period_results.map{|v| v['by_period']}.map{|v| v['sp500_return']}
-    result['sp500'] = (returns.inject{ |sum, el| sum + el }.to_f / returns.size).round(4)
+    result['sp500'] = (((returns.inject{ |sum, el| sum + el }.to_f / returns.size).round(4) + 1)**12 - 1).round(4)
     result
   end
 
   def st_deviation_by_period(start_date, end_date, by_period_results)
     result = {}
-    result['description'] = 'Standard deviation of returns, by period'
+    result['description'] = 'Standard deviation of monthly returns'
     result['portfolio'] = standard_deviation(by_period_results.map{|v| v['by_period']}.map{|v| v['return']}).round(4)
     result['sp500'] = standard_deviation(by_period_results.map{|v| v['by_period']}.map{|v| v['sp500_return']}).round(4)
     result
@@ -211,7 +208,7 @@ class ReportGenerator
 
    def st_deviation_annualized(start_date, end_date, by_period_results)
     result = {}
-    result['description'] = 'Standard deviation of returns, annualized'
+    result['description'] = 'Standard deviation of annualized monthly returns'
     result['portfolio'] = standard_deviation(by_period_results.map{|v| v['annualized']}.map{|v| v['return']}).round(4)
     result['sp500'] = standard_deviation(by_period_results.map{|v| v['annualized']}.map{|v| v['sp500_return']}).round(4)
     result
@@ -220,7 +217,8 @@ class ReportGenerator
   def sharpe(inputs)
     result = {}
     result['description'] = 'Sharpe ratio (based on geometric average and rf = 4%)'
-    result['portfolio'] = ((inputs['a_geometric']['portfolio'] - 0.04) / inputs['d_st_deviation_annualized']['portfolio']).round(3)
+    result['portfolio'] = ((inputs['a_geometric']['portfolio'] - 0.04) / inputs['d_st_deviation_annualized']['portfolio']).round(3) unless
+      inputs['a_geometric']['portfolio'] == 'error'
     result['sp500'] = ((inputs['a_geometric']['sp500'] - 0.04) / inputs['d_st_deviation_annualized']['sp500']).round(3)
     result
   end

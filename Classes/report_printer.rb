@@ -8,10 +8,10 @@ class ReportPrinter
   end
 
   def generate
-    Axlsx::Package.new do |p|
+      Axlsx::Package.new do |p|
       wb = p.workbook
       generate_summary(wb)
-      generate_positions(wb)
+      # generate_positions(wb)
       p.serialize("Reports/#{filename}")
       return filename
     end
@@ -74,7 +74,7 @@ class ReportPrinter
       end
       this_line = results['aggregated']['table']['f_sharpe']
       s.add_row ['', 'Sharpe ratio', this_line['portfolio'], this_line['sp500']]
-      s.column_widths 3, 36, 15, 11, 11, 11, 11, 11, 11, 11, 11
+      s.column_widths 3, 43, 15, 11, 11, 11, 11, 11, 11, 11, 11
     end
   end
 
@@ -85,7 +85,8 @@ class ReportPrinter
                   alignment: { horizontal: :center, vertical: :center, wrap_text: true} )
       decimal_2 = s.styles.add_style(num_fmt: 4)
       delimiter = s.styles.add_style(num_fmt: 3)
-      currency = s.styles.add_style(num_fmt: 8)
+      currency = s.styles.add_style(num_fmt: 7)
+      currency_red = s.styles.add_style(num_fmt: 8)
       percentage = s.styles.add_style(num_fmt: 10)
       right_align = s.styles.add_style(alignment: { horizontal: :right} )
       s.sheet_view.show_grid_lines = false
@@ -111,7 +112,7 @@ class ReportPrinter
                     period['end_date'] == '' ? '' : position['profit'],
                     position['notes']],
                     style: [nil, nil, nil, Array.new(4, decimal_2), percentage, percentage, delimiter,
-                            Array.new(5, currency), right_align].flatten }
+                            Array.new(4, currency), currency_red, right_align].flatten }
           s.add_row ['', 'Cash', Array.new(9, ''), period['cash'], '',
                     period['end_date'] == '' ? '' : period['cash'], '',
                     ''].flatten, style: italicized
