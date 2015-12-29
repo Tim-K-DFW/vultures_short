@@ -4,7 +4,6 @@ class PriceTable
   attr_reader :main_table, :size, :company_table
 
   def initialize
-    binding.pry
     @main_table = {}
     @company_table = CompanyTable.new
     @size = 0
@@ -22,16 +21,21 @@ class PriceTable
   end
 
   def subset(args)
-    main_table.select { |k, v| 
-                      (v.period == args[:period] &&
-                      v.market_cap >= args[:cap_floor] &&
-                      v.market_cap <= args[:cap_ceiling] &&
-                      v.price > 0 &&
-                      v.price < 200000 &&
-                      v.delisted == FALSE &&
-                      v.ltm_ebit != 0 &&
-                      v.roc != 0 &&
-                      v.earnings_yield != 0) }.map { |k, v| v }
+    if args[:industry]
+      this_industry_cids = company_table.industry_subset(args[:industry])
+      temp_subset = main_table.select{|k, v| this_industry_cids.include?(v.cid) }
+    else
+      temp_subset = main_table
+    end
+    temp_subset.select { |k, v| 
+                (v.period == args[:period] &&
+                v.market_cap >= args[:cap_floor] &&
+                v.market_cap <= args[:cap_ceiling] &&
+                v.price > 0 &&
+                v.price < 200000 &&
+                v.delisted == FALSE &&
+                v.ltm_ebit != 0 &&
+                v.earnings_yield != 0) }.map { |k, v| v }
   end
 
   def where(args)
@@ -51,28 +55,16 @@ class PriceTable
   end
 
   def all_periods(args=nil)
-    # select(:period).map(&:period).uniq
-    # if args[:single_period] == '1'
-    #   start_date = Date.strptime(args[:start_date], '%Y-%m-%d')
-    #   [start_date.to_s, (start_date+1.year).to_s]
-    # else
-    #   range = args[:development] == true ? (1993..2001).to_a : (1993..2014).to_a
-    #   result = []
-    #   range.each { |year| result << "#{year}-12-31" }
-    #   result
-    # end
-
+    range = (args && args[:debug]) ? (2005..2006) : (2005..2012)
     result = []
-    if args[:debug]
-      (2005..2006).each do |year|
-        (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }
-      end
-    else
-      (2005..2015).each do |year|
-        (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }
-      end
+    range.each do |year|
+      (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }
     end
     result
+  end
+
+  def all_industries
+    company_table.all_industries
   end
   
   private

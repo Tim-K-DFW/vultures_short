@@ -82,9 +82,7 @@ class Portfolio
 
   def close_all(args)
     today = args[:new_period]
-    periods[today][:positions].each do |stock|
-      sell(stock: stock[0], amount: :all, date: today)
-    end
+    periods[today][:positions].each { |stock| sell(stock: stock[0], amount: :all, date: today) }
   end
 
   def sell(args)

@@ -96,13 +96,13 @@ class ReportPrinter
       s.add_row []
       results['positions'].each do |period|
         s.add_row ['', period['end_date'] == '' ? "Current portfolio" : "Period ending #{period['end_date']}"], sz: 14
-        s.add_row ['', 'Capital IQ ID','Company', 'Market cap', 'LTM EBIT', 'EV', 'Net PPE + NWC', 'Earnings Yield',
-                  'ROC', 'Shares', 'BEG price per share', 'BEG market value', 
+        s.add_row ['', 'Capital IQ ID','Company', 'Sector', 'Market cap', 'LTM EBIT', 'EV', 'Net PPE + NWC',
+                  'Earnings Yield', 'ROC', 'Shares', 'BEG price per share', 'BEG market value', 
                   period['end_date'] == '' ? ['', '', ''] : ['END Price per share', 'END market value', 'Profit'],
                   'Notes'].flatten,
-                  style: [nil, Array.new(15, table_title)].flatten
+                  style: [nil, Array.new(16, table_title)].flatten
         period['positions'].each { |position|
-          s.add_row ['', position['cid'], position['company_name'],
+          s.add_row ['', position['cid'], position['company_name'], position['sector'],
                     position['market_cap'], position['ltm_ebit'], position['ev'],
                     position['capital'], position['earnings_yield'],
                     position['roc'], position['share_count'],
@@ -111,20 +111,19 @@ class ReportPrinter
                     period['end_date'] == '' ? '' : position['ending_value'],
                     period['end_date'] == '' ? '' : position['profit'],
                     position['notes']],
-                    style: [nil, nil, nil, Array.new(4, decimal_2), percentage, percentage, delimiter,
+                    style: [nil, nil, nil, nil, Array.new(4, decimal_2), percentage, percentage, delimiter,
                             Array.new(4, currency), currency_red, right_align].flatten }
-          s.add_row ['', 'Cash', Array.new(9, ''), period['cash'], '',
+          s.add_row ['', 'Cash', Array.new(10, ''), period['cash'], '',
                     period['end_date'] == '' ? '' : period['cash'], '',
                     ''].flatten, style: italicized
-          s.add_row ['', 'Total', Array.new(9, ''),
+          s.add_row ['', 'Total', Array.new(10, ''),
                     period['total_value_beginning'], '',
-
                     period['end_date'] == '' ? '' : period['total_value_ending'],
                     period['end_date'] == '' ? '' : period['total_profit'], ''].flatten,
-                    style: [nil, Array.new(15, table_title)].flatten
+                    style: [nil, Array.new(16, table_title)].flatten
           s.add_row []
       end
-      s.column_widths 3, 11, 40, 10, 10, 10, 10, 10, 10, 10, 10, 16, 10, 16, 16, 22
+      s.column_widths 3, 11, 40, 20, 10, 10, 10, 10, 10, 10, 10, 10, 16, 10, 16, 16, 22
     end
   end
 end

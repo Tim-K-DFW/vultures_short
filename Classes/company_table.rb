@@ -14,4 +14,12 @@ class CompanyTable
   def where(args)
     main_table[args[:cid].to_sym]
   end
+
+  def all_industries
+    main_table.map{|k, v| v.sector}.uniq - ['index']
+  end
+
+  def industry_subset(industry)
+    main_table.select{ |k, v| v.sector == industry }.map{ |k, v| k.to_s }
+  end
 end

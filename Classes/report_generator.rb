@@ -70,6 +70,7 @@ class ReportGenerator
         this_position = {}
         this_position['cid'] = cid.to_s
         this_position['company_name'] = data_table.company_table.where(cid: cid).name || '------name not found, Inc.'
+        this_position['sector'] = data_table.company_table.where(cid: cid).sector
         current_pricepoint = data_table.where(cid: cid, period: date)
         this_position['market_cap'] = current_pricepoint.market_cap.round(1)
         this_position['ltm_ebit'] = current_pricepoint.ltm_ebit.round(1)

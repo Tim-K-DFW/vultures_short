@@ -31,7 +31,8 @@ class Engine
         data_table,
         { market_cap_floor: parameters["market_cap_floor"], 
         market_cap_ceiling: parameters["market_cap_ceiling"],
-        period: period }
+        period: period,
+        position_count: @portfolio.position_count }
       ).assign_scores
 
       # puts "Processing #{period} - building portfolio"
