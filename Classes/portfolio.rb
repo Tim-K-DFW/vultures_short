@@ -40,9 +40,13 @@ class Portfolio
   end
 
   def rebalance(args)
-    sell_non_target_stocks(args)
-    adjust_target_stocks_already_held(args)
-    add_target_stocks_not_already_held(args)
+    if as_of(args[:new_period])[:total_market_value] > 0
+      sell_non_target_stocks(args)
+      adjust_target_stocks_already_held(args)
+      add_target_stocks_not_already_held(args)
+    else
+      close_all(args)
+    end
   end
 
   # private
@@ -73,6 +77,14 @@ class Portfolio
     # puts "Processing #{args[:new_period]} - buying new stocks"
     stocks_to_add = target.select { |cid, position| !periods[args[:new_period]][:positions].keys.include? cid }
     stocks_to_add.each{ |cid, position| buy(date: args[:new_period], stock: cid, amount: position[:share_count]) }
+  end
+
+
+  def close_all(args)
+    today = args[:new_period]
+    periods[today][:positions].each do |stock|
+      sell(stock: stock[0], amount: :all, date: today)
+    end
   end
 
   def sell(args)

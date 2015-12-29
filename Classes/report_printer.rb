@@ -11,7 +11,7 @@ class ReportPrinter
       Axlsx::Package.new do |p|
       wb = p.workbook
       generate_summary(wb)
-      # generate_positions(wb)
+      generate_positions(wb)
       p.serialize("Reports/#{filename}")
       return filename
     end

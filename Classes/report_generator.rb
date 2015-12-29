@@ -181,7 +181,7 @@ class ReportGenerator
     result['description'] = 'Geometric average return, annualized'
     beginning_balance = portfolio.as_of(start_date)[:total_market_value]
     ending_balance = portfolio.as_of(end_date)[:total_market_value]
-    result['portfolio'] = ending_balance.abs < 1e+12 ? ((ending_balance / beginning_balance) ** (1.0 / (portfolio.periods.count / 12)) - 1).round(4) : 'error'
+    result['portfolio'] = ending_balance / beginning_balance > 0.1 ? ((ending_balance / beginning_balance) ** (1.0 / (portfolio.periods.count / 12.0)) - 1).round(4) : 'over 90% loss'
     sp500_beginning_balance = data_table.where(cid: SP500_ID, period: start_date).price
     sp500_ending_balance = data_table.where(cid: SP500_ID, period: end_date).price
     result['sp500'] = ((sp500_ending_balance / sp500_beginning_balance) ** (1.0 / (portfolio.periods.count / 12)) - 1).round(4)
@@ -218,7 +218,7 @@ class ReportGenerator
     result = {}
     result['description'] = 'Sharpe ratio (based on geometric average and rf = 4%)'
     result['portfolio'] = ((inputs['a_geometric']['portfolio'] - 0.04) / inputs['d_st_deviation_annualized']['portfolio']).round(3) unless
-      inputs['a_geometric']['portfolio'] == 'error'
+      inputs['a_geometric']['portfolio'] == 'over 90% loss'
     result['sp500'] = ((inputs['a_geometric']['sp500'] - 0.04) / inputs['d_st_deviation_annualized']['sp500']).round(3)
     result
   end
