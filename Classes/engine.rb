@@ -32,7 +32,9 @@ class Engine
         { market_cap_floor: parameters["market_cap_floor"], 
         market_cap_ceiling: parameters["market_cap_ceiling"],
         period: period,
-        position_count: @portfolio.position_count }
+        position_count: @portfolio.position_count,
+        weights: parameters['weights'],
+        range_52_cap: parameters['52_week_range_cap'] }
       ).assign_scores
 
       # puts "Processing #{period} - building portfolio"

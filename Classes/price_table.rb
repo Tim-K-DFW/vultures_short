@@ -29,11 +29,12 @@ class PriceTable
                 (v.period == args[:period] &&
                 v.market_cap >= args[:cap_floor] &&
                 v.market_cap <= args[:cap_ceiling] &&
-                v.price > 0 &&
                 v.price < 200000 &&
                 v.delisted == FALSE &&
                 v.ltm_ebit != 0 &&
-                v.earnings_yield != 0) }.map { |k, v| v }
+                v.earnings_yield != 0 &&
+                v.range_52 > 0 &&
+                v.range_52 <= args[:range_52_cap]) }.map { |k, v| v }
   end
 
   def where(args)

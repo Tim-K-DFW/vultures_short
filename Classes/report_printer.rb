@@ -40,6 +40,9 @@ class ReportPrinter
       s.add_row ['','# of positions in portfolio', results['parameters']['position_count']]
       s.add_row ['','Market cap floor, $mm', results['parameters']['market_cap_floor']]
       s.add_row ['','Market cap ceiling, $mm', results['parameters']['market_cap_ceiling']]
+      s.add_row ['','Maximum % of 52-week range', results['parameters']['52_week_range_cap']]
+      s.add_row ['','Weight of Earnings Yield', results['parameters']['weights']['earnings_yield']]
+      s.add_row ['','Weight of 52 week range', results['parameters']['weights']['52_week_range']]
       s.add_row []
       s.add_row ['','By period'], sz: 14
       s.add_row ['','Period ending', 'Market value at period end', 'by period', '', 'by period, annualized',
@@ -47,12 +50,12 @@ class ReportPrinter
       s.add_row ['', '', '', Array.new(4, ['tested strategy', 'S&P 500'])].flatten,
                 style: [nil, Array.new(10, table_title)].flatten
       s.add_row ['','Initial balance', results['parameters']['initial_balance']], style: italicized
-      s.merge_cells('b11:b12')
-      s.merge_cells('c11:c12')
-      s.merge_cells('d11:e11')
-      s.merge_cells('f11:g11')
-      s.merge_cells('h11:i11')
-      s.merge_cells('j11:k11')
+      s.merge_cells('b14:b15')
+      s.merge_cells('c14:c15')
+      s.merge_cells('d14:e14')
+      s.merge_cells('f14:g14')
+      s.merge_cells('h14:i14')
+      s.merge_cells('j14:k14')
       results['performance'].each { |period|
         s.add_row ['', period['date'], period['balance'],
                   period['by_period']['return'],
@@ -97,7 +100,7 @@ class ReportPrinter
       results['positions'].each do |period|
         s.add_row ['', period['end_date'] == '' ? "Current portfolio" : "Period ending #{period['end_date']}"], sz: 14
         s.add_row ['', 'Capital IQ ID','Company', 'Sector', 'Market cap', 'LTM EBIT', 'EV', 'Net PPE + NWC',
-                  'Earnings Yield', 'ROC', 'Shares', 'BEG price per share', 'BEG market value', 
+                  'Earnings Yield', '% of 52 week range', 'Shares', 'BEG price per share', 'BEG market value', 
                   period['end_date'] == '' ? ['', '', ''] : ['END Price per share', 'END market value', 'Profit'],
                   'Notes'].flatten,
                   style: [nil, Array.new(16, table_title)].flatten
@@ -105,7 +108,7 @@ class ReportPrinter
           s.add_row ['', position['cid'], position['company_name'], position['sector'],
                     position['market_cap'], position['ltm_ebit'], position['ev'],
                     position['capital'], position['earnings_yield'],
-                    position['roc'], position['share_count'],
+                    position['52_week_range'], position['share_count'],
                     position['beginning_price'], position['beginning_value'],
                     period['end_date'] == '' ? '' : position['ending_price'],
                     period['end_date'] == '' ? '' : position['ending_value'],
@@ -123,7 +126,7 @@ class ReportPrinter
                     style: [nil, Array.new(16, table_title)].flatten
           s.add_row []
       end
-      s.column_widths 3, 11, 40, 20, 10, 10, 10, 10, 10, 10, 10, 10, 16, 10, 16, 16, 22
+      s.column_widths 3, 11, 40, 25, 10, 10, 10, 10, 10, 10, 10, 10, 16, 10, 16, 16, 22
     end
   end
 end

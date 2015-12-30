@@ -74,5 +74,9 @@ def engine_params_hardcoded
     'initial_balance'  => 1000000,
     'rebalance_frequency'  => 'monthly',
     'start_date'  => '2005-01-01',
+    'weights' => {
+      'earnings_yield' => 0.5,
+      '52_week_range' => 0.5 },
+    '52_week_range_cap' => 1,
     debug: true }
 end

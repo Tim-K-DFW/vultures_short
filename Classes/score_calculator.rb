@@ -1,33 +1,36 @@
 class ScoreCalculator
   require 'yaml'
-
-  attr_accessor :stocks, :data_table, :args, :result
+  attr_accessor :data_table, :args, :result
+  attr_reader :weights
 
   def initialize(data_table, args)
     @data_table = data_table
     @args = args
     @result = []
-    @stocks = []
+    @weights = args[:weights]
   end
 
   def assign_scores
     allocations = calculate_allocations
     data_table.all_industries.each do |industry|
-      this_industry = []
+      @entire_industry = []
       array = data_table.subset({
                 industry: industry,
                 period: args[:period],
                 cap_floor: args[:market_cap_floor],
-                cap_ceiling: args[:market_cap_ceiling] })
-      array.each { |element| this_industry << element.attributes }
+                cap_ceiling: args[:market_cap_ceiling],
+                range_52_cap: args[:range_52_cap] })
+      array.each { |element| @entire_industry << element.attributes }
       
-      this_industry = assign_earnings_yield_scores(this_industry)
-      this_industry = assign_total_scores(this_industry)
+      assign_earnings_yield_scores
+      assign_52_week_range_scores
+      assign_total_scores
+      
       for i in 0..(allocations[industry] - 1) do 
-        if this_industry[i] == nil
+        if @entire_industry[i] == nil
           raise "Cannot find enough stocks in #{industry} during #{args[:period]}. Try to extend the market cap range."
         else
-          result << this_industry[i]
+          result << @entire_industry[i]
         end
       end
     end
@@ -50,12 +53,17 @@ class ScoreCalculator
     result
   end
 
-  def assign_earnings_yield_scores(list)
-    list.sort_by { |h| h["earnings_yield"] }.each_with_index{ |v, i| v["ey_score"] = i + 1 }
+  def assign_earnings_yield_scores
+    @entire_industry.sort_by { |h| h['earnings_yield'] }.each_with_index{ |v, i| v['ey_score'] = i + 1 }
   end
 
-  def assign_total_scores(list)
-    list.each { |stock| stock["total_score"] = stock["ey_score"] }
-    list.sort_by! { |h| h["total_score"] }
+  def assign_52_week_range_scores
+    @entire_industry.sort_by { |h| h['range_52'] }.each_with_index{ |v, i| v['52_range_score'] = i + 1 }
+  end
+
+  def assign_total_scores
+    @entire_industry.each { |stock| stock['total_score'] = stock['ey_score'] * @weights['earnings_yield'] +
+                            stock['52_range_score'] * @weights['52_week_range'] }
+    @entire_industry.sort_by! { |h| h['total_score'] }
   end
 end

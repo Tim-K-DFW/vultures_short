@@ -65,7 +65,6 @@ class ReportGenerator
       this_period['start_date'] = date
       end_date = this_period['end_date'] = portfolio.periods.keys[portfolio.periods.keys.index(date) + 1] || ''
       this_period['positions'] = []
-
       data[:positions].each do |cid, position|
         this_position = {}
         this_position['cid'] = cid.to_s
@@ -78,15 +77,14 @@ class ReportGenerator
         this_position['capital'] = (current_pricepoint.nwc + current_pricepoint.net_ppe).round(1)
         this_position['earnings_yield'] = current_pricepoint.earnings_yield.round(4)
         this_position['roc'] = current_pricepoint.roc.round(4)
+        this_position['52_week_range'] = current_pricepoint.range_52.round(4)
         this_position['share_count'] = position.share_count
         this_position['beginning_price'] = (current_pricepoint.price).round(2)
         this_position['beginning_value'] = (this_position['share_count'] * this_position['beginning_price']).round(2)
         end_period_price_point = end_date == '' ? nil : data_table.where(cid: cid, period: end_date)
-
         this_position['ending_price'] = end_date == '' ? 'n/a' : (end_period_price_point.price).round(2)
         this_position['ending_value'] = end_date == '' ? 'n/a' : (this_position['share_count'] * this_position['ending_price']).round(2)
         this_position['profit'] = end_date == '' ? 'n/a' : (this_position['ending_value'] - this_position['beginning_value']).round(2)
-        
         if end_period_price_point && end_period_price_point.delisted
           this_position['notes'] = "delisted on #{end_period_price_point.delisting_date}"
         else
@@ -94,6 +92,7 @@ class ReportGenerator
         end        
         this_period['positions'] << this_position
       end
+      this_period['positions'].sort_by! { |h| h['sector'] }
 
       this_period['cash'] = data[:cash]
       this_period['total_value_beginning'] = (this_period['positions'].inject(0) {|total, el| total + el['beginning_value']} + this_period['cash']).round(2)

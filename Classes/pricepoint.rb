@@ -1,7 +1,7 @@
 class PricePoint
   attr_accessor :cid, :period, :market_cap, :net_ppe, :nwc, :ltm_ebit, :ev, :earnings_yield, :roc, :price, :delisted, :delisting_date, :low_52, :high_52, :range_52, :ltm_ebitda, :ocf_ltm, :ocf_minus_1, :ocf_minus_2
 
-  FIELDS = ['cid', 'period', 'market_cap', 'net_ppe', 'nwc', 'ltm_ebit', 'ev', 'earnings_yield', 'roc', 'price']
+  FIELDS = ['cid', 'period', 'market_cap', 'earnings_yield', 'price', 'range_52']
 
   def initialize(args)
     @cid = args[:cid]
