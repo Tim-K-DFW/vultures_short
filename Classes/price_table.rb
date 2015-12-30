@@ -1,12 +1,15 @@
 require 'csv'
 
 class PriceTable
-  attr_reader :main_table, :size, :company_table
+  attr_reader :main_table, :size, :debug
+  attr_accessor :industry_split, :industry_map, :company_table
 
-  def initialize
-    @main_table = {}
+  def initialize(args = nil)
     @company_table = CompanyTable.new
+    @main_table = {}
+    @industry_split = {}
     @size = 0
+    @debug = args && args[:debug]
     load
   end
 
@@ -21,13 +24,14 @@ class PriceTable
   end
 
   def subset(args)
-    if args[:industry]
-      this_industry_cids = company_table.industry_subset(args[:industry])
-      temp_subset = main_table.select{|k, v| this_industry_cids.include?(v.cid) }
-    else
-      temp_subset = main_table
+    if !args[:industry]
+      puts 'Trying to use PriceTable#subset without Industry arg... Don\'t have join table to do that...'
+      # use the following to manually re-build industry data pieces (safe mode only)
+      # this_industry_cids = company_table.industry_subset(args[:industry])
+      # temp_subset = main_table.select{|k, v| this_industry_cids.include?(v.cid) }
+      # File.open('ind_1_full.marsh', 'wb') {|f| f.write(Marshal.dump(temp_subset)) }
     end
-    temp_subset.select { |k, v| 
+    industry_split[args[:industry]].select { |k, v| 
                 (v.period == args[:period] &&
                 v.market_cap >= args[:cap_floor] &&
                 v.market_cap <= args[:cap_ceiling] &&
@@ -39,7 +43,7 @@ class PriceTable
   end
 
   def where(args)
-    main_table["#{args[:cid]}$#{args[:period]}".to_sym]
+    industry_split[industry_map[args[:cid]]]["#{args[:cid]}$#{args[:period]}".to_sym]
   end
 
   def keys
@@ -66,15 +70,58 @@ class PriceTable
   def all_industries
     company_table.all_industries
   end
-  
+
   private
 
-  # use #load only to re-build the source objects
-  # takes over 2 min to load
-  # save to Marshal only possible in Safe Mode (from 2005 only)
-  # currently they are stored in a Marshal file (~14 sec)
-
   def load
+    puts '--------------------------------------------------------'
+    puts 'Loading data...'
+    start_time = Time.now
+    load_companies
+    load_industry_partitions
+    load_industry_map
+    puts "All data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
+    puts '--------------------------------------------------------'
+  end
+
+  def load_companies
+    self.company_table = Marshal.load File.open("Data/companies.marsh", 'rb').read
+    puts 'Company data loaded!'
+  end
+
+  def load_industry_partitions
+    industries = all_industries
+    result = {}
+      for i in 1..8 do
+        puts "Loading industry data for #{industries[i - 1]}..."
+        if debug
+          result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}.marsh", 'rb').read
+        else
+          result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}_full.marsh", 'rb').read
+        end
+      end
+    result['index'] = Marshal.load File.open("Data/ind_9_full.marsh", 'rb').read
+    self.industry_split = result
+    puts 'Pricing and fundamental data loaded!'
+  end
+
+  def load_industry_map
+    result = {}
+    company_table.main_table.each do |k, v|
+      result[k] = v.sector
+    end
+    puts 'Industry mapping loaded!'
+    self.industry_map = result
+  end
+
+
+  def build_from_csv
+  # constructs PriceTable from CSV files
+  # takes over 2 min to run on 2005-2015 data
+  # Safe Mode required to save Marshal files
+  # currently the fully constructed instance is loaded from Marshal files (~14 sec to load)
+  # use it only to re-build the PriceTable instance when needed
+
     puts '--------------------------------------------------------'
     puts 'Loading data...'
     start_time = Time.now
@@ -112,8 +159,6 @@ class PriceTable
           end
           new_entry = PricePoint.new(new_entry_fields) if new_entry_fields[:delisting_date] != ''
           self.add(new_entry)
-
-          # confirm total count
 
           $stdout.sync = true
           print "   #{((size / 822756.0) * 100).round(1).to_s}% complete; #{comma_separated(size)} out of 822,756 entries added\r" if size % 1000 == 0

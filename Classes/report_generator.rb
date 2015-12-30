@@ -3,7 +3,7 @@ class ReportGenerator
   attr_accessor :resuts
 
   # TODO: replace with 'sp500' during next data file rebuild, same for Russell2000
-  SP500_ID = 'IQ2668699'   
+  SP500_ID = :IQ2668699
 
   def initialize(data_table, portfolio, parameters)
     @data_table = data_table

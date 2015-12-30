@@ -14,18 +14,21 @@ class ScoreCalculator
     allocations = calculate_allocations
     data_table.all_industries.each do |industry|
       this_industry = []
-      puts "Retreiving data for #{args[:period]} for #{industry}..."
       array = data_table.subset({
-      industry: industry,
-      period: args[:period],
-      cap_floor: args[:market_cap_floor],
-      cap_ceiling: args[:market_cap_ceiling] })
+                industry: industry,
+                period: args[:period],
+                cap_floor: args[:market_cap_floor],
+                cap_ceiling: args[:market_cap_ceiling] })
       array.each { |element| this_industry << element.attributes }
       
       this_industry = assign_earnings_yield_scores(this_industry)
       this_industry = assign_total_scores(this_industry)
       for i in 0..(allocations[industry] - 1) do 
-        result << this_industry[i]
+        if this_industry[i] == nil
+          raise "Cannot find enough stocks in #{industry} during #{args[:period]}. Try to extend the market cap range."
+        else
+          result << this_industry[i]
+        end
       end
     end
     result

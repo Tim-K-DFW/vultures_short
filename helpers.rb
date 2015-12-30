@@ -5,6 +5,7 @@ def load_data(args = nil)
   start_time = Time.now
   result = Marshal.load File.open(filename, 'rb').read
   puts "Data loaded! Time spent: #{(Time.now - start_time).round(2)} seconds."
+  puts 'Industy map added.'
   puts '--------------------------------------------------------'
   result
 end
@@ -26,10 +27,14 @@ def standard_deviation(arg)
   (arg.inject(0){|sum,x| sum + ((x-mean) ** 2) } / arg.size) ** 0.5
 end
 
-def another_run?
-  $stdout.sync = true
-  print 'Another run? ("y" for yes) => '
-  gets.chomp == 'y'
+def another_run?(arg)
+  if arg == 'debug'
+    false
+  else
+    $stdout.sync = true
+    print 'Another run? ("y" for yes) => '
+    gets.chomp == 'y'
+  end
 end
 
 def comma_separated(num)
@@ -40,13 +45,13 @@ def engine_params
   $stdout.sync = true
   result = {}
 
-  print 'Market cap FLOOR in $mm (minimum 50, default 100) => '
+  print 'Market cap FLOOR in $mm (minimum 50, default 500) => '
   input = gets.chomp
-  result['market_cap_floor'] = input == '' ? 100 : input.to_i
+  result['market_cap_floor'] = input == '' ? 500 : input.to_i
 
-  print 'Market cap CEILING in $mm (minimum 50, default 200) => '
+  print 'Market cap CEILING in $mm (minimum 50, default 10,000) => '
   input = gets.chomp
-  result['market_cap_ceiling'] = input == '' ? 200 : input.to_i
+  result['market_cap_ceiling'] = input == '' ? 10000 : input.to_i
 
   print 'Number of stocks in portfolio (default 20) => '
   input = gets.chomp

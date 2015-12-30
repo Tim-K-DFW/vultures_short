@@ -33,7 +33,11 @@ class TargetPortfolio
 
   def build_initial_positions
     max_allocation_per_position = @current_portfolio_balance / @position_count
-    market_data.sort_by! {|h| h['total_score'] }
+    begin
+      market_data.sort_by! {|h| h['total_score'] }
+    rescue
+      binding.pry
+    end
     @position_count.times do |i|
       begin
         positions[market_data[i]['cid'].to_sym] = this_position = {}
