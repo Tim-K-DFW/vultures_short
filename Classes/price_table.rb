@@ -24,13 +24,7 @@ class PriceTable
   end
 
   def subset(args)
-    if !args[:industry]
-      puts 'Trying to use PriceTable#subset without Industry arg... Don\'t have join table to do that...'
-      # use the following to manually re-build industry data pieces (safe mode only)
-      # this_industry_cids = company_table.industry_subset(args[:industry])
-      # temp_subset = main_table.select{|k, v| this_industry_cids.include?(v.cid) }
-      # File.open('ind_1_full.marsh', 'wb') {|f| f.write(Marshal.dump(temp_subset)) }
-    end
+    raise 'Trying to use PriceTable#subset without Industry arg... Don\'t have join table to do that...' if !args[:industry]
     industry_split[args[:industry]].select { |k, v| 
                 (v.period == args[:period] &&
                 v.market_cap >= args[:cap_floor] &&
@@ -85,7 +79,7 @@ class PriceTable
   end
 
   def load_companies
-    self.company_table = Marshal.load File.open("Data/companies.marsh", 'rb').read
+    @company_table = Marshal.load File.open("Data/companies.marsh", 'rb').read
     puts 'Company data loaded!'
   end
 
@@ -93,7 +87,7 @@ class PriceTable
     industries = all_industries
     result = {}
       for i in 1..8 do
-        puts "Loading industry data for #{industries[i - 1]}..."
+        puts "Loading price and fundamental data for #{industries[i - 1]}..."
         if debug
           result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}.marsh", 'rb').read
         else
@@ -101,8 +95,8 @@ class PriceTable
         end
       end
     result['index'] = Marshal.load File.open("Data/ind_9_full.marsh", 'rb').read
-    self.industry_split = result
-    puts 'Pricing and fundamental data loaded!'
+    @industry_split = result
+    puts 'All price and fundamental data loaded!'
   end
 
   def load_industry_map
@@ -111,9 +105,23 @@ class PriceTable
       result[k] = v.sector
     end
     puts 'Industry mapping loaded!'
-    self.industry_map = result
+    @industry_map = result
   end
 
+
+  def build_industry_datafiles
+  # optional, use when need to rebuild industry source files
+    industries = all_industries
+    industries << 'index'
+    for i in (1..9) do
+      puts "Loading #{industries[i-1]}..."
+      this_industry_cids = company_table.industry_subset(industries[i - 1])
+      temp_subset = main_table.select{ |k, v| this_industry_cids.include?(v.cid) }
+      filename = "ind_#{i}_full.marsh"
+      File.open(filename, 'wb') {|f| f.write(Marshal.dump(temp_subset)) }
+      puts "#{industries[i-1]} saved to #{filename}."
+    end
+  end
 
   def build_from_csv
   # constructs PriceTable from CSV files
@@ -126,12 +134,12 @@ class PriceTable
     puts 'Loading data...'
     start_time = Time.now
     periods = []
-    (2005..2006).each do |year|
+    (2005..2015).each do |year|
       (1..12).each { |month| periods << "#{month}/1/#{year}" }
     end
 
     # (1..2).each do |part|
-      CSV.foreach("data_m_2005-06.csv", headers: true, encoding: 'ISO-8859-1') do |row|
+      CSV.foreach("data_m_2005.csv", headers: true, encoding: 'ISO-8859-1') do |row|
         for i in 0..periods.size - 1
           new_entry_fields = {
             cid: row[2],
