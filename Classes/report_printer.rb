@@ -19,7 +19,7 @@ class ReportPrinter
 
   def filename
     p = results['parameters']
-    "results-#{p['position_count']}@#{p['market_cap_floor']}-#{p['market_cap_ceiling']}.xlsx"
+    "results-#{p['position_count']}-#{p['market_cap_floor']}-#{p['market_cap_ceiling']}.xlsx"
   end
 
   def generate_summary(wb)

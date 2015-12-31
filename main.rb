@@ -6,7 +6,8 @@ Dir["Classes/*.rb"].each { |file| load file }
 
 case ARGV[0]
 when 'output_only'
-  ReportPrinter.new(JSON.parse(File.read('result.txt'))).generate
+  filename = ReportPrinter.new(JSON.parse(File.read('result.txt'))).generate
+  puts "Full report saved to #{filename}."
 when 'pause'
   binding.pry
 else
@@ -16,7 +17,7 @@ else
     results = Engine.new(data_table, params).perform
     File.open("result.txt", "w") { |file| file.write(results.to_json) }
     puts 'JSON results saved to result.txt.'
-    filename = ReportPrinter.new(results).generate
+    filename = ReportPrinter.new(JSON.parse(File.read('result.txt'))).generate
     puts "Full report saved to #{filename}."
     puts '--------------------------------------------------------'
   end until !another_run?(ARGV[0])
