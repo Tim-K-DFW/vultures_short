@@ -78,6 +78,7 @@ class ReportGenerator
         this_position['earnings_yield'] = current_pricepoint.earnings_yield.round(4)
         this_position['roc'] = current_pricepoint.roc.round(4)
         this_position['52_week_range'] = current_pricepoint.range_52.round(4)
+        this_position['ocf_3yr_yield'] = current_pricepoint.ocf_3yr_yield.round(4)
         this_position['share_count'] = position.share_count
         this_position['beginning_price'] = (current_pricepoint.price).round(2)
         this_position['beginning_value'] = (this_position['share_count'] * this_position['beginning_price']).round(2)

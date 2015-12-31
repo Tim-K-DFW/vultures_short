@@ -90,7 +90,7 @@ class PriceTable
       for i in 1..8 do
         puts "Loading price and fundamental data for #{industries[i - 1]}..."
         if debug
-          result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}.marsh", 'rb').read
+          result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}_short.marsh", 'rb').read
         else
           result[industries[i - 1]] = Marshal.load File.open("Data/ind_#{i}_full.marsh", 'rb').read
         end
@@ -115,10 +115,10 @@ class PriceTable
     industries = all_industries
     industries << 'index'
     for i in (1..9) do
-      puts "Loading #{industries[i-1]}..."
+      puts "Processing #{industries[i-1]}..."
       this_industry_cids = company_table.industry_subset(industries[i - 1])
       temp_subset = main_table.select{ |k, v| this_industry_cids.include?(v.cid) }
-      filename = "ind_#{i}_full.marsh"
+      filename = "ind_#{i}_short.marsh"
       File.open(filename, 'wb') {|f| f.write(Marshal.dump(temp_subset)) }
       puts "#{industries[i-1]} saved to #{filename}."
     end
@@ -135,13 +135,17 @@ class PriceTable
     puts 'Loading data...'
     start_time = Time.now
     periods = []
-    (2005..2015).each do |year|
+    (2005..2006).each do |year|
       (1..12).each { |month| periods << "#{month}/1/#{year}" }
     end
 
     # (1..2).each do |part|
-      CSV.foreach("data_m_2005.csv", headers: true, encoding: 'ISO-8859-1') do |row|
+      CSV.foreach("data_m_2005-06.csv", headers: true, encoding: 'ISO-8859-1') do |row|
         for i in 0..periods.size - 1
+          ocf_ltm = row[i * 15 + 14].to_f.round(3)
+          ocf_minus_1 = row[i * 15 + 15].to_f.round(3)
+          ocf_minus_2 = row[i * 15 + 16].to_f.round(3)
+
           new_entry_fields = {
             cid: row[2],
             period: (Date.strptime(periods[i], '%m/%d/%Y')).to_s,
@@ -151,15 +155,16 @@ class PriceTable
             ev: row[i * 15 + 11].to_f.round(3),
             ltm_ebit: row[i * 15 + 12].to_f.round(3),
             # ltm_ebitda: row[i * 15 + 13].to_f.round(3),
-            ocf_ltm: row[i * 15 + 14].to_f.round(3) > 0 ? '+' : '-',
-            ocf_minus_1: row[i * 15 + 15].to_f.round(3) > 0 ? '+' : '-',
-            ocf_minus_2: row[i * 15 + 16].to_f.round(3) >0 ? '+' : '-',
+            ocf_ltm: ocf_ltm,
+            ocf_minus_1: ocf_minus_1,
+            ocf_minus_2: ocf_minus_2,
             net_ppe: row[i * 15 + 17].to_f.round(3),
             nwc: row[i * 15 + 18].to_f.round(3),
             market_cap: row[i * 15 + 19].to_f.round(3),
             range_52: row[i * 15 + 20].to_f.round(3),
             roc: row[i * 15 + 21].to_f.round(3),
             earnings_yield: row[i * 15 + 22].to_f.round(3),
+            ocf_3yr_yield: row[i * 15 + 11].to_f > 0 ? ((ocf_ltm + ocf_minus_1 + ocf_minus_2) / row[i * 15 + 11].to_f).round(3) : 0,
             delisted: (row[6] == 'index' ? true : false) }
           delisted_check = /(\d+\/\d+\/\d+)/.match(row[i * 15 + 8])
           if delisted_check

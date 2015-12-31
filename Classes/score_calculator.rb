@@ -24,8 +24,9 @@ class ScoreCalculator
       
       assign_earnings_yield_scores
       assign_52_week_range_scores
+      assign_ocf_yield_scores
       assign_total_scores
-      
+
       for i in 0..(allocations[industry] - 1) do 
         if @entire_industry[i] == nil
           raise "Cannot find enough stocks in #{industry} during #{args[:period]}. Try to extend the market cap range."
@@ -61,9 +62,15 @@ class ScoreCalculator
     @entire_industry.sort_by { |h| h['range_52'] }.each_with_index{ |v, i| v['52_range_score'] = i + 1 }
   end
 
+  def assign_ocf_yield_scores
+    @entire_industry.sort_by { |h| h['ocf_3yr_yield'] }.each_with_index{ |v, i| v['ocf_yield_score'] = i + 1 }
+  end
+
   def assign_total_scores
-    @entire_industry.each { |stock| stock['total_score'] = stock['ey_score'] * @weights['earnings_yield'] +
-                            stock['52_range_score'] * @weights['52_week_range'] }
+    @entire_industry.each { |stock| stock['total_score'] =
+      stock['ey_score'] * @weights['earnings_yield'] +
+      stock['52_range_score'] * @weights['52_week_range'] +
+      stock['ocf_yield_score'] * @weights['ocf_3yr_yield'] }
     @entire_industry.sort_by! { |h| h['total_score'] }
   end
 end

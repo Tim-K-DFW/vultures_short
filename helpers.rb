@@ -44,6 +44,7 @@ end
 def engine_params
   $stdout.sync = true
   result = {}
+  result['weights'] = {}
 
   print 'Market cap FLOOR in $mm (minimum 50, default 500) => '
   input = gets.chomp
@@ -60,10 +61,24 @@ def engine_params
   print 'Initial balance in $ (default 1,000,000, no commas) => '
   input = gets.chomp
   result['initial_balance'] = input == '' ? 1000000 : input.to_i
+
+  print 'Scoring weight for Earnings Yield (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  input = gets.chomp
+  result['weights']['earnings_yield'] = input == '' ? 0.33 : input.to_f
+
+  print 'Scoring weight for % of 52-week range (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  input = gets.chomp
+  result['weights']['52_week_range'] = input == '' ? 0.33 : input.to_f
+
+  print 'Scoring weight for 3-year OCF yield (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  input = gets.chomp
+  result['weights']['ocf_3yr_yield'] = input == '' ? 0.33 : input.to_f
+
   puts '--------------------------------------------------------'
 
   result['rebalance_frequency'] = 'monthly'
   result['start_date'] = '2005-01-01'
+  result['52_week_range_cap'] = 1
   result
 end
 
@@ -75,8 +90,9 @@ def engine_params_hardcoded
     'rebalance_frequency'  => 'monthly',
     'start_date'  => '2005-01-01',
     'weights' => {
-      'earnings_yield' => 0.5,
-      '52_week_range' => 0.5 },
+      'earnings_yield' => -1,
+      '52_week_range' => 0,
+      'ocf_3yr_yield' => 0 },
     '52_week_range_cap' => 1,
     debug: true }
 end
