@@ -43,42 +43,38 @@ end
 
 def engine_params
   $stdout.sync = true
-  result = {}
-  result['weights'] = {}
+  result = YAML.load_file('params.yml')
 
-  print 'Market cap FLOOR in $mm (minimum 50, default 500) => '
+  print "Market cap FLOOR in $mm (ENTER to keep #{result['market_cap_floor']}) => "
   input = gets.chomp
-  result['market_cap_floor'] = input == '' ? 500 : input.to_i
+  result['market_cap_floor'] = input.to_i unless input == ''
 
-  print 'Market cap CEILING in $mm (minimum 50, default 10,000) => '
+  print "Market cap CEILING in $mm (ENTER to keep #{result['market_cap_ceiling']}) => "
   input = gets.chomp
-  result['market_cap_ceiling'] = input == '' ? 10000 : input.to_i
+  result['market_cap_ceiling'] = input.to_i unless input == ''
 
-  print 'Number of stocks in portfolio (default 20) => '
+  print "Number of stocks in portfolio (ENTER to keep #{result['position_count']}) => "
   input = gets.chomp
-  result['position_count'] = input == '' ? 20 : input.to_i
+  result['position_count'] = input.to_i unless input == ''
 
-  print 'Initial balance in $ (default 1,000,000, no commas) => '
+  print "Initial balance in $ (ENTER to keep #{result['initial_balance']}) => "
   input = gets.chomp
-  result['initial_balance'] = input == '' ? 1000000 : input.to_i
+  result['initial_balance'] = input.to_i unless input == ''
 
-  print 'Scoring weight for Earnings Yield (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  print "Weight for Earnings Yield (-1 to 1; ENTER to keep #{result['weights']['earnings_yield']}) => "
   input = gets.chomp
-  result['weights']['earnings_yield'] = input == '' ? 0.33 : input.to_f
+  result['weights']['earnings_yield'] = input.to_f unless input == ''
 
-  print 'Scoring weight for % of 52-week range (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  print "Weight for % of 52-week range (-1 to 1; ENTER to keep #{result['weights']['52_week_range']}) => "
   input = gets.chomp
-  result['weights']['52_week_range'] = input == '' ? 0.33 : input.to_f
+  result['weights']['52_week_range'] = input.to_f unless input == ''
 
-  print 'Scoring weight for 3-year OCF yield (-1 to 1; lower values rank higher when positive; default 0.33) => '
+  print "Weight for 3-year OCF yield (-1 to 1; ENTER to keep #{result['weights']['ocf_3yr_yield']}) => "
   input = gets.chomp
-  result['weights']['ocf_3yr_yield'] = input == '' ? 0.33 : input.to_f
+  result['weights']['ocf_3yr_yield'] = input.to_f unless input == ''
 
   puts '--------------------------------------------------------'
-
-  result['rebalance_frequency'] = 'monthly'
-  result['start_date'] = '2005-01-01'
-  result['52_week_range_cap'] = 1
+  File.open('params.yml', 'w') {|f| f.write result.to_yaml }
   result
 end
 

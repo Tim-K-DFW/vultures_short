@@ -29,7 +29,7 @@ class PriceTable
                 (v.period == args[:period] &&
                 v.market_cap >= args[:cap_floor] &&
                 v.market_cap <= args[:cap_ceiling] &&
-                v.price < 200000 &&
+                v.price < 1000 &&
                 v.delisted == FALSE &&
                 v.ltm_ebit != 0 &&
                 v.earnings_yield != 0 &&
@@ -54,7 +54,7 @@ class PriceTable
   end
 
   def all_periods(args=nil)
-    range = (args && args[:debug]) ? (2005..2006) : (2005..2012)
+    range = (args && args[:debug]) ? (2005..2006) : (2005..2015)
     result = []
     range.each do |year|
       (1..12).each { |month| result << "#{year}-#{"%02d" % month}-01" }

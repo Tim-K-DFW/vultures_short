@@ -8,6 +8,7 @@ class ReportPrinter
   end
 
   def generate
+      puts 'Creating full report...'
       Axlsx::Package.new do |p|
       wb = p.workbook
       generate_summary(wb)

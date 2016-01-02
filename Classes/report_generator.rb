@@ -93,7 +93,7 @@ class ReportGenerator
         end        
         this_period['positions'] << this_position
       end
-      this_period['positions'].sort_by! { |h| h['sector'] }
+      this_period['positions'].sort_by! { |h| -h['profit'].to_f }
 
       this_period['cash'] = data[:cash]
       this_period['total_value_beginning'] = (this_period['positions'].inject(0) {|total, el| total + el['beginning_value']} + this_period['cash']).round(2)
@@ -209,18 +209,18 @@ class ReportGenerator
 
    def st_deviation_annualized(start_date, end_date, by_period_results)
     result = {}
-    result['description'] = 'Standard deviation of annualized monthly returns'
-    result['portfolio'] = standard_deviation(by_period_results.map{|v| v['annualized']}.map{|v| v['return']}).round(4)
-    result['sp500'] = standard_deviation(by_period_results.map{|v| v['annualized']}.map{|v| v['sp500_return']}).round(4)
+    result['description'] = 'Annualized standard deviation of monthly returns'
+    result['portfolio'] = (standard_deviation(by_period_results.map{|v| v['by_period']}.map{|v| v['return']}) * Math.sqrt(12)).round(4)
+    result['sp500'] = (standard_deviation(by_period_results.map{|v| v['by_period']}.map{|v| v['sp500_return']}) * Math.sqrt(12)).round(4)
     result
   end
 
   def sharpe(inputs)
     result = {}
     result['description'] = 'Sharpe ratio (based on geometric average and rf = 4%)'
-    result['portfolio'] = ((inputs['a_geometric']['portfolio'] - 0.04) / inputs['d_st_deviation_annualized']['portfolio']).round(3) unless
+    result['portfolio'] = ((inputs['a_geometric']['portfolio'] - 0.03) / inputs['d_st_deviation_annualized']['portfolio']).round(3) unless
       inputs['a_geometric']['portfolio'] == 'over 90% loss'
-    result['sp500'] = ((inputs['a_geometric']['sp500'] - 0.04) / inputs['d_st_deviation_annualized']['sp500']).round(3)
+    result['sp500'] = ((inputs['a_geometric']['sp500'] - 0.03) / inputs['d_st_deviation_annualized']['sp500']).round(3)
     result
   end
 
